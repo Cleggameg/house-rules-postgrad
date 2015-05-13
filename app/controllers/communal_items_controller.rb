@@ -19,13 +19,16 @@ class CommunalItemsController < ApplicationController
 
   def create
       @house = House.find(params[:house_id])
+      @stock_levels = ["high","low","out"]
       @item = @house.communal_items.create(item_params)
       if @item.save
         @notification = Notification.create(alert: "#{current_user.first_name} has added #{@item.name} to the inventory.", category: "communal_items", house_id: @house.id)
         HousingAssignment.where(house_id: @house.id).select do |assignment|
           assignment.user.user_notifications.create(notification: @notification)
         end
-        redirect_to house_communal_items_path(@house)
+        if request.xhr?
+          render @item, layout: false
+        end
       else
           render 'new'
       end
